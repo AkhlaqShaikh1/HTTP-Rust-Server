@@ -14,7 +14,7 @@ fn main() {
             Ok(mut stream) => {
                 println!("accepted new connection");
                 stream
-                    .write(b"Hello, world!HTTP/1.1 200 OK\r\n\r\n")
+                    .write(b"HTTP/1.1 200 OK\r\n\r\n")
                     .expect("Write Failed");
             }
             Err(e) => {
