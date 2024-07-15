@@ -25,7 +25,7 @@ fn handle_connection(mut stream: TcpStream) {
             } else if tokens[1].starts_with("/user-agent") {
                 let response = lines[3].replace("User-Agent: ", "");
                 println!("{}", response);
-                let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len(), response).as_bytes()).unwrap();
+                let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{response}", response.len()).as_bytes()).unwrap();
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
             }
