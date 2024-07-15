@@ -23,7 +23,7 @@ fn handle_connection(mut stream: TcpStream) {
                 let response = tokens[1].replace("/echo/", "");
                 let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len(), response).as_bytes());
             } else if tokens[1].starts_with("/user-agent") {
-                let response = lines[3].replace("User-Agent: ", "");
+                let response = lines[3];
                 println!("{}", response);
                 println!("{}", response.len());
                 let test = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}", response).as_bytes()).unwrap();
