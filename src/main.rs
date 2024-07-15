@@ -26,7 +26,7 @@ fn handle_connection(mut stream: TcpStream) {
                 let mut user_agent = String::new();
                 for line in lines.iter() {
                     if line.starts_with("User-Agent: ") {
-                        user_agent = line.replace("User-Agent: ", "");
+                        user_agent = line.replace("User-Agent: ", "") ;
                         break;
                     }
                 }
