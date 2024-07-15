@@ -14,7 +14,7 @@ fn handle_connection(mut stream: TcpStream) {
     let lines: Vec<&str> = request.split("\r\n").collect();
     let tokens: Vec<&str> = lines[0].split(" ").collect();
 
-    println!("Tokens {:?}", tokens);
+    println!("{}", lines[3]);
     match tokens[0] {
         "GET" => {
             if tokens[1] == "/" {
@@ -25,7 +25,9 @@ fn handle_connection(mut stream: TcpStream) {
             } else if tokens[1].starts_with("/user-agent") {
                 let response = lines[3].replace("User-Agent: ", "");
                 println!("{}", response);
-                let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{response}", response.len()).as_bytes()).unwrap();
+                println!("{}", response.len());
+                let test = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}", response).as_bytes()).unwrap();
+                println!("STREAM : {}", test);
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
             }
