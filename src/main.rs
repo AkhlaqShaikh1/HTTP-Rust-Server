@@ -29,8 +29,6 @@ fn handle_connection(mut stream: TcpStream) {
                         break;
                     }
                 }
-                println!("User-Agent: {}", user_agent);
-                println!("User-Agent LEN: {}", user_agent.len());
                 let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", user_agent.len(), user_agent).as_bytes());
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
