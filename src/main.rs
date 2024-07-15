@@ -1,19 +1,32 @@
 // Uncomment this block to pass the first stage
 use std::{
-    io::{prelude::*, BufReader},
+    io::{Read, Write},
     net::{TcpListener, TcpStream},
 };
 
 fn handle_connection(mut stream: TcpStream) {
-    let buf = BufReader::new(&stream);
-
-    let lines = buf.lines().next().unwrap().unwrap();
-    let response = match lines.as_str() {
-        "GET / HTTP/1.1" => "HTTP/1.1 200 OK\r\n\r\n",
-        _ => "HTTP/1.1 404 Not Found\r\n\r\n",
-    };
-
-    stream.write_all(response.as_bytes()).unwrap();
+    println!("Connection established!");
+    let mut buffer = [0; 1024];
+    stream.read(&mut buffer).unwrap();
+    let request = String::from_utf8_lossy(&buffer[..]);
+    let lines: Vec<&str> = request.split("\r\n").collect();
+    let tokens: Vec<&str> = lines[0].split(" ").collect();
+    println!("Request: {}", tokens[1]);
+    match tokens[0] {
+        "GET" => {
+            if tokens[1] == "/" {
+                let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
+            } else if tokens[1].starts_with("/echo/") {
+                let response = tokens[1].replace("/echo/", "");
+                let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", response.len(), response).as_bytes());
+            } else {
+                let _ = stream.write(b"HTTP/1.1 404 NOT FOUND\r\n\r\n");
+            }
+        }
+        _ => {
+            println!("Unknown method: {}", tokens[0])
+        }
+    }
 }
 
 fn main() {
