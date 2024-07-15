@@ -20,8 +20,8 @@ fn handle_connection(mut stream: TcpStream) {
                 let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", response.len(), response).as_bytes());
             } else if tokens[1].starts_with("/user-agent") {
                 let response = lines[3].replace("User-Agent: ", "");
-                println!("{}", response);
-                let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}" , response.len(), response).as_bytes());
+                println!("{}", response.len());
+                let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", response.len(), response).as_bytes());
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
             }
