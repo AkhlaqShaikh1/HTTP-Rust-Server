@@ -2,6 +2,7 @@
 use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
+    thread,
 };
 
 const CRLF: &str = "\r\n";
@@ -40,7 +41,6 @@ fn handle_connection(mut stream: TcpStream) {
     }
 }
 
-
 fn main() {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
@@ -52,7 +52,7 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(_stream) => {
-                handle_connection(_stream);
+                thread::spawn(|| handle_connection(_stream));
             }
             Err(e) => {
                 println!("error: {}", e);
