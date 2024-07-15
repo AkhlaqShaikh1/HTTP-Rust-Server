@@ -11,6 +11,7 @@ fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 2048];
     stream.read(&mut buffer).unwrap();
     let request = String::from_utf8_lossy(&buffer[..]);
+    println!("Request: {}", request); // Log the entire request for debugging
     let lines: Vec<&str> = request.split("\r\n").collect();
     let tokens: Vec<&str> = lines[0].split(" ").collect();
     match tokens[0] {
@@ -21,10 +22,16 @@ fn handle_connection(mut stream: TcpStream) {
                 let response = tokens[1].replace("/echo/", "");
                 let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len(), response).as_bytes());
             } else if tokens[1].starts_with("/user-agent") {
-                let test = lines[3].replace("User-Agent: ", "");
-                println!("User-Agent: {}", test);
-                println!("User-Agent LEN: {:}", test.to_string().len());
-                let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {:?}\r\n\r\n{}", test.len(), test).as_bytes());
+                let mut user_agent = String::new();
+                for line in lines.iter() {
+                    if line.starts_with("User-Agent: ") {
+                        user_agent = line.replace("User-Agent: ", "");
+                        break;
+                    }
+                }
+                println!("User-Agent: {}", user_agent);
+                println!("User-Agent LEN: {}", user_agent.len());
+                let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", user_agent.len(), user_agent).as_bytes());
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
             }
