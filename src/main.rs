@@ -23,12 +23,17 @@ fn handle_connection(mut stream: TcpStream) {
                 let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
             } else if tokens[1].starts_with("/echo/") {
                 let response = tokens[1].replace("/echo/", "");
+                let mut encoding = "";
                 for lines in lines.iter() {
                     if lines.starts_with("Accept-Encoding: ") {
-                        let encoding = lines.replace("Accept-Encoding: ", "");
-                        let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: {}{CRLF}Content-Length: {}{CRLF}{CRLF}{}", encoding, response.len(), response).as_bytes());
-                        return;
+                        encoding = &lines.replace("Accept-Encoding: ", "");
+                        break;
                     }
+                }
+
+                if encoding.contains("gzip") {
+                    let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: gzip{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len() , response).as_bytes());
+                    return;
                 }
 
                 let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len(), response).as_bytes());
