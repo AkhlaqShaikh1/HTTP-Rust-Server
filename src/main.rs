@@ -1,8 +1,10 @@
 // Uncomment this block to pass the first stage
 use std::{
+    env, fs,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
-    thread,
+    path::Path,
+    str, thread,
 };
 
 const CRLF: &str = "\r\n";
@@ -11,8 +13,7 @@ fn handle_connection(mut stream: TcpStream) {
     println!("Connection established!");
     let mut buffer = [0; 2048];
     stream.read(&mut buffer).unwrap();
-    let request = String::from_utf8_lossy(&buffer[..]);
-    println!("Request: {}", request); // Log the entire request for debugging
+    let request = String::from_utf8_lossy(&buffer[..]); // Log the entire request for debugging
     let lines: Vec<&str> = request.split("\r\n").collect();
     let tokens: Vec<&str> = lines[0].split(" ").collect();
     match tokens[0] {
@@ -32,15 +33,13 @@ fn handle_connection(mut stream: TcpStream) {
                 }
                 let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", user_agent.len(), user_agent).as_bytes());
             } else if tokens[1].starts_with("/files/") {
-                let file_name = tokens[1].replace("/files/", "");
-                println!("File name: {}", file_name);
-                let file = std::fs::read_to_string(file_name);
-                println!("File: {:?}", file);
-                match file {
-                    Ok(content) => {
-                        let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}", content.len(), content).as_bytes());
-                    }
-                    Err(_) => {
+                if let Some(dir) = env::args().nth(2) {
+                    let file_name = tokens[1].replace("/files/", "");
+                    if let Ok(mut file) = fs::File::open(Path::new(&dir).join(file_name)) {
+                        let mut contents = String::new();
+                        file.read_to_string(&mut contents).unwrap();
+                        let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", contents.len(), contents).as_bytes());
+                    } else {
                         let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
                     }
                 }
