@@ -50,7 +50,7 @@ fn handle_connection(mut stream: TcpStream) {
                 if let Some(dir) = env::args().nth(2) {
                     let file_name = tokens[1].replace("/files/", "");
                     if let Ok(mut file) = fs::File::open(Path::new(&dir).join(file_name)) {
-                        let mut contents = String::new();
+                        let mut contents = String::new() ;
                         file.read_to_string(&mut contents).unwrap();
                         let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}", contents.len(), contents).as_bytes());
                     } else {
