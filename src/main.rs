@@ -54,15 +54,39 @@ fn handle_connection(mut stream: TcpStream) {
                 let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
             } else if tokens[1].starts_with("/files/") {
                 let file_name = tokens[1].replace("/files/", "");
-                let mut contents = String::new();
-                let content_length = lines[4].replace("Content-Length: ", "").parse::<usize>();
-                let cl = content_length.unwrap();
-                for i in 0..cl {
-                    contents.push(lines[7].chars().nth(i).unwrap());
+                let mut content_length = 0;
+                let mut is_header = true;
+                let mut body_start_index = 0;
+
+                // Find Content-Length header and the start of the body
+                for (index, line) in lines.iter().enumerate() {
+                    if line.starts_with("Content-Length: ") {
+                        content_length = line
+                            .replace("Content-Length: ", "")
+                            .parse::<usize>()
+                            .unwrap();
+                    }
+                    if line.is_empty() && is_header {
+                        body_start_index = index + 1;
+                        is_header = false;
+                    }
                 }
+
+                // Read the body
+                let mut contents = String::new();
+                for line in &lines[body_start_index..] {
+                    contents.push_str(line);
+                    contents.push_str("\r\n");
+                }
+                contents = contents.trim_end().to_string(); // Remove trailing \r\n
+
+                if contents.len() > content_length {
+                    contents.truncate(content_length);
+                }
+
                 if let Some(dir) = env::args().nth(2) {
                     let _ = fs::write(Path::new(&dir).join(file_name), contents);
-                    let _ = stream.write(b"HTTP/1.1 201 OK\r\n\r\n");
+                    let _ = stream.write(b"HTTP/1.1 201 Created\r\n\r\n");
                 } else {
                     let _ = stream.write(b"HTTP/1.1 500 Internal Server Error\r\n\r\n");
                 }
