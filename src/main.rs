@@ -26,11 +26,24 @@ fn handle_connection(mut stream: TcpStream) {
                 let mut user_agent = String::new();
                 for line in lines.iter() {
                     if line.starts_with("User-Agent: ") {
-                        user_agent = line.replace("User-Agent: ", "") ;
+                        user_agent = line.replace("User-Agent: ", "");
                         break;
                     }
                 }
                 let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", user_agent.len(), user_agent).as_bytes());
+            } else if tokens[1].starts_with("/files/") {
+                let file_name = tokens[1].replace("/files/", "");
+                println!("File name: {}", file_name);
+                let file = std::fs::read_to_string(file_name);
+                println!("File: {:?}", file);
+                match file {
+                    Ok(content) => {
+                        let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}", content.len(), content).as_bytes());
+                    }
+                    Err(_) => {
+                        let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
+                    }
+                }
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
             }
