@@ -72,7 +72,7 @@ fn handle_connection(mut stream: TcpStream) {
                 }
                 if let Some(dir) = env::args().nth(2) {
                     let _ = fs::write(Path::new(&dir).join(file_name), contents);
-                    let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
+                    let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n") ;
                 } else {
                     let _ = stream.write(b"HTTP/1.1 500 Internal Server Error\r\n\r\n");
                 }
