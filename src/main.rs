@@ -38,7 +38,7 @@ fn handle_connection(mut stream: TcpStream) {
                     if let Ok(mut file) = fs::File::open(Path::new(&dir).join(file_name)) {
                         let mut contents = String::new();
                         file.read_to_string(&mut contents).unwrap();
-                        let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{}", contents.len(), contents).as_bytes());
+                        let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}", contents.len(), contents).as_bytes());
                     } else {
                         let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
                     }
