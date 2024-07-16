@@ -55,24 +55,14 @@ fn handle_connection(mut stream: TcpStream) {
             } else if tokens[1].starts_with("/files/") {
                 let file_name = tokens[1].replace("/files/", "");
                 let mut contents = String::new();
-                for line in lines.iter() {
-                    if line.starts_with("Content-Length: ") {
-                        let content_length = line
-                            .replace("Content-Length: ", "")
-                            .parse::<usize>()
-                            .unwrap();
-                        contents = lines[lines.len() - 1].to_string();
-                        if contents.len() != content_length {
-                            let mut buffer = vec![0; content_length - contents.len()];
-                            stream.read(&mut buffer).unwrap();
-                            contents.push_str(str::from_utf8(&buffer).unwrap());
-                        }
-                        break;
-                    }
+                let content_length = lines[4].replace("Content-Length: ", "").parse::<usize>();
+                let cl = content_length.unwrap();
+                for i in 0..cl {
+                    contents.push(lines[7].chars().nth(i).unwrap());
                 }
                 if let Some(dir) = env::args().nth(2) {
                     let _ = fs::write(Path::new(&dir).join(file_name), contents);
-                    let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n") ;
+                    let _ = stream.write(b"HTTP/1.1 201 OK\r\n\r\n");
                 } else {
                     let _ = stream.write(b"HTTP/1.1 500 Internal Server Error\r\n\r\n");
                 }
