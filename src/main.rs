@@ -16,13 +16,22 @@ fn handle_connection(mut stream: TcpStream) {
     let request = String::from_utf8_lossy(&buffer[..]); // Log the entire request for debugging
     let lines: Vec<&str> = request.split("\r\n").collect();
     let tokens: Vec<&str> = lines[0].split(" ").collect();
+
     match tokens[0] {
         "GET" => {
             if tokens[1] == "/" {
                 let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
             } else if tokens[1].starts_with("/echo/") {
                 let response = tokens[1].replace("/echo/", "");
-                let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len(), response).as_bytes());
+                for lines in lines.iter() {
+                    if lines.starts_with("Accept-Encoding: ") {
+                        let encoding = lines.replace("Accept-Encoding: ", "");
+                        let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: {}{CRLF}Content-Length: {}{CRLF}{CRLF}{}", encoding, response.len(), response).as_bytes());
+                        return;
+                    }
+                }
+
+                let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: {}{CRLF}Content-Length: {}{CRLF}{CRLF}{}", encoding, response.len(), response).as_bytes());
             } else if tokens[1].starts_with("/user-agent") {
                 let mut user_agent = String::new();
                 for line in lines.iter() {
