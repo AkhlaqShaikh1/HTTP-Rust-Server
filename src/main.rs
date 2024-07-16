@@ -7,6 +7,8 @@ use std::{
     str, thread,
 };
 
+use flate2::{read::GzEncoder, Compression};
+
 const CRLF: &str = "\r\n";
 
 fn handle_connection(mut stream: TcpStream) {
@@ -32,7 +34,12 @@ fn handle_connection(mut stream: TcpStream) {
                 }
 
                 if encoding.contains("gzip") {
-                    let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: gzip{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len() , response).as_bytes());
+                    let new_resp = tokens[1].replace("/echo/", "");
+                    let body = new_resp.as_bytes();
+                    let mut compbody: Vec<u8> = Vec::new();
+                    let mut encoder = GzEncoder::new(&body[..], Compression::default());
+                    println!("Encoding: {:?}", encoder.read_to_end(&mut compbody));
+                    let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: gzip{CRLF}Content-Length: {}{CRLF}{CRLF}{:?}", compbody.len() , encoder).as_bytes());
                     return;
                 }
 
@@ -50,7 +57,7 @@ fn handle_connection(mut stream: TcpStream) {
                 if let Some(dir) = env::args().nth(2) {
                     let file_name = tokens[1].replace("/files/", "");
                     if let Ok(mut file) = fs::File::open(Path::new(&dir).join(file_name)) {
-                        let mut contents = String::new() ;
+                        let mut contents = String::new();
                         file.read_to_string(&mut contents).unwrap();
                         let _ = stream.write(format!("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n{}", contents.len(), contents).as_bytes());
                     } else {
