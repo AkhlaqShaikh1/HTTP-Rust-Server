@@ -23,10 +23,10 @@ fn handle_connection(mut stream: TcpStream) {
                 let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
             } else if tokens[1].starts_with("/echo/") {
                 let response = tokens[1].replace("/echo/", "");
-                let mut encoding = "";
+                let mut encoding = String::new();
                 for lines in lines.iter() {
                     if lines.starts_with("Accept-Encoding: ") {
-                        encoding = &lines.replace("Accept-Encoding: ", "");
+                        encoding = lines.replace("Accept-Encoding: ", "");
                         break;
                     }
                 }
