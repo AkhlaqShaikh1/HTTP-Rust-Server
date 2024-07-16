@@ -15,7 +15,7 @@ fn handle_connection(mut stream: TcpStream) {
     println!("Connection established!");
     let mut buffer = [0; 2048];
     stream.read(&mut buffer).unwrap();
-    let request = String::from_utf8_lossy(&buffer[..]); 
+    let request = String::from_utf8_lossy(&buffer[..]);
     let lines: Vec<&str> = request.split("\r\n").collect();
     let tokens: Vec<&str> = lines[0].split(" ").collect();
 
@@ -34,15 +34,15 @@ fn handle_connection(mut stream: TcpStream) {
                 }
 
                 if encoding.contains("gzip") {
-                    let new_resp = tokens[1].replace("/echo/", "") ;
+                    let new_resp = tokens[1].replace("/echo/", "");
                     let body = new_resp.as_bytes();
                     let mut compbody: Vec<u8> = Vec::new();
                     let mut encoder = GzEncoder::new(&body[..], Compression::default());
-                    println!("Encoding: {:?}", encoder.read_to_end(&mut compbody));
-                    let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: gzip{CRLF}Content-Length: {}{CRLF}{CRLF}{:?}", compbody.len() , encoder).as_bytes());
+                    encoder.read_to_end(&mut compbody).unwrap(); // Compress the body and store it in compbody
+                    let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Encoding: gzip{CRLF}Content-Length: {}{CRLF}{CRLF}",compbody.len() ).as_bytes(),);
+                    let _ = stream.write(&compbody); // Write the compressed body to the response stream
                     return;
                 }
-
                 let _ = stream.write(format!("HTTP/1.1 200 OK{CRLF}Content-Type: text/plain{CRLF}Content-Length: {}{CRLF}{CRLF}{}", response.len(), response).as_bytes());
             } else if tokens[1].starts_with("/user-agent") {
                 let mut user_agent = String::new();
