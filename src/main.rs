@@ -15,7 +15,7 @@ fn handle_connection(mut stream: TcpStream) {
     println!("Connection established!");
     let mut buffer = [0; 2048];
     stream.read(&mut buffer).unwrap();
-    let request = String::from_utf8_lossy(&buffer[..]); // Log the entire request for debugging
+    let request = String::from_utf8_lossy(&buffer[..]); 
     let lines: Vec<&str> = request.split("\r\n").collect();
     let tokens: Vec<&str> = lines[0].split(" ").collect();
 
@@ -34,7 +34,7 @@ fn handle_connection(mut stream: TcpStream) {
                 }
 
                 if encoding.contains("gzip") {
-                    let new_resp = tokens[1].replace("/echo/", "");
+                    let new_resp = tokens[1].replace("/echo/", "") ;
                     let body = new_resp.as_bytes();
                     let mut compbody: Vec<u8> = Vec::new();
                     let mut encoder = GzEncoder::new(&body[..], Compression::default());
