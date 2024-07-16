@@ -46,6 +46,37 @@ fn handle_connection(mut stream: TcpStream) {
             } else {
                 let _ = stream.write(b"HTTP/1.1 404 Not Found\r\n\r\n");
             }
+
+            stream.flush().unwrap();
+        }
+        "POST" => {
+            if tokens[1] == "/" {
+                let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
+            } else if tokens[1].starts_with("/files/") {
+                let file_name = tokens[1].replace("/files/", "");
+                let mut contents = String::new();
+                for line in lines.iter() {
+                    if line.starts_with("Content-Length: ") {
+                        let content_length = line
+                            .replace("Content-Length: ", "")
+                            .parse::<usize>()
+                            .unwrap();
+                        contents = lines[lines.len() - 1].to_string();
+                        if contents.len() != content_length {
+                            let mut buffer = vec![0; content_length - contents.len()];
+                            stream.read(&mut buffer).unwrap();
+                            contents.push_str(str::from_utf8(&buffer).unwrap());
+                        }
+                        break;
+                    }
+                }
+                if let Some(dir) = env::args().nth(2) {
+                    let _ = fs::write(Path::new(&dir).join(file_name), contents);
+                    let _ = stream.write(b"HTTP/1.1 200 OK\r\n\r\n");
+                } else {
+                    let _ = stream.write(b"HTTP/1.1 500 Internal Server Error\r\n\r\n");
+                }
+            }
         }
         _ => {
             println!("Unknown method: {}", tokens[0])
